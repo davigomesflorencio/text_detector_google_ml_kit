@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.text_detector_google_ml_kit">
    <application
-        android:label="text_detector_google_ml_kit"
+        android:label="Text Detector"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
