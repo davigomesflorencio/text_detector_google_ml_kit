@@ -1,10 +1,24 @@
-# text_detector_google_ml_kit
+# App de detecção de texto com o Kit de Machine Learning do Google
 
 ## Descrição
 
 Projeto desenvolvido para demonstrar a utilização da API que reconhece textos do Kit ML para Flutter do Google.
 
 Neste projeto uso o **KitML para Flutter do Google**, **Dart Code Metrics**, **ImagePicker**, **Path Provider** e **Camera**.
+
+## Tecnologias utilizadas
+
+<p>
+
+<img alt="Dart" src="https://img.shields.io/badge/Dart-15A6C4.svg?style=for-the-badge&logo=dart&logoColor=white">
+<img alt="Flutter" src="https://img.shields.io/badge/Flutter-02569B.svg?style=for-the-badge&logo=flutter&logoColor=white">
+<img alt="Android" src="https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white">
+<img alt="Android Studio" src="https://img.shields.io/badge/Android%20Studio-008678.svg?style=for-the-badge&logo=android-studio&logoColor=white">
+
+</p>
+
+
+## Depedências Flutter utilizadas
 
 O **Kit ML para Flutter do Google** que é um conjunto de plugins Flutter que permitem que os aplicativos usem o Kit ML autônomo do Google.
 
