@@ -1,5 +1,10 @@
 # App de detecção de texto com o Kit de Machine Learning do Google
 
+## Novidades
+
+- Novo design
+- Aprimoramento do código
+
 ## Descrição
 
 Projeto desenvolvido para demonstrar a utilização da API que reconhece textos do Kit ML para Flutter do Google.
@@ -17,7 +22,6 @@ Neste projeto uso o **KitML para Flutter do Google**, **Dart Code Metrics**, **I
 
 </p>
 
-
 ## Depedências Flutter utilizadas
 
 O **Kit ML para Flutter do Google** que é um conjunto de plugins Flutter que permitem que os aplicativos usem o Kit ML autônomo do Google.
@@ -25,10 +29,6 @@ O **Kit ML para Flutter do Google** que é um conjunto de plugins Flutter que pe
 - [Reconhecimento de texto do Kit ML do Google para flutter](https://github.com/bharat-biradar/Google-Ml-Kit-plugin/tree/master/packages/google_mlkit_text_recognition)
 
 Um plugin Flutter para usar o ML Kit Text Recognition do Google para reconhecer texto em qualquer conjunto de caracteres chinês, Devanagari, japonês, coreano e latino.
-
-- [Dart Code Metrics](https://pub.dev/packages/dart_code_metrics)
-
-**Dart Code Metrics** é uma ferramenta de análise estática que ajuda você a analisar e melhorar a qualidade do seu código e fornece regras adicionais para o analisador.
 
 - [Image Picker](https://pub.dev/packages/image_picker)
 
@@ -45,8 +45,9 @@ Um plugin Flutter para usar o ML Kit Text Recognition do Google para reconhecer 
 ## Preview
 
 <div>
-<img src="assets/print1.jpg" alt="drawing" style="width:200px;"/>
-<img src="assets/print2.jpg" alt="drawing" style="width:200px;"/>
+<img src="assets/print3.jpg" alt="drawing" style="width:200px;"/>
+<img src="assets/print4.jpg" alt="drawing" style="width:200px;"/>
+<img src="assets/print5.jpg" alt="drawing" style="width:200px;"/>
 <div>
 
 ## Começando
