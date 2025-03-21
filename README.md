@@ -46,8 +46,12 @@ Um plugin Flutter para usar o ML Kit Text Recognition do Google para reconhecer 
 
 <div>
 <img src="assets/print3.jpg" alt="drawing" style="width:200px;"/>
-<img src="assets/print4.jpg" alt="drawing" style="width:200px;"/>
+<img src="assets/print7.jpg" alt="drawing" style="width:200px;"/>
+<div>
+
+<div>
 <img src="assets/print5.jpg" alt="drawing" style="width:200px;"/>
+<img src="assets/print6.jpg" alt="drawing" style="width:200px;"/>
 <div>
 
 ## Começando
