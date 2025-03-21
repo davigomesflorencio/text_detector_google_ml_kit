@@ -1,7 +1,10 @@
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:text_detector_google_ml_kit/painters/text_detector_painter.dart';
 import 'package:text_detector_google_ml_kit/src/pages/components/camera_view.dart';
+
+import 'components/detector_view.dart';
 
 class TextRecognizerPage extends StatefulWidget {
   const TextRecognizerPage({Key? key}) : super(key: key);
@@ -11,11 +14,13 @@ class TextRecognizerPage extends StatefulWidget {
 }
 
 class _TextRecognizerPageState extends State<TextRecognizerPage> {
-  final TextRecognizer _textRecognizer = TextRecognizer();
+  var _script = TextRecognitionScript.latin;
+  var _textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
   bool _canProcess = true;
   bool _isBusy = false;
   CustomPaint? _customPaint;
   String? _text;
+  var _cameraLensDirection = CameraLensDirection.back;
 
   @override
   void dispose() async {
@@ -26,17 +31,17 @@ class _TextRecognizerPageState extends State<TextRecognizerPage> {
 
   @override
   Widget build(BuildContext context) {
-    return CameraViewPage(
+    return DetectorView(
       title: 'Reconhecimento de textos',
       customPaint: _customPaint,
       text: _text,
-      onImage: (inputImage) {
-        processImage(inputImage);
-      },
+      onImage: _processImage,
+      initialCameraLensDirection: _cameraLensDirection,
+      onCameraLensDirectionChanged: (value) => _cameraLensDirection = value,
     );
   }
 
-  Future<void> processImage(InputImage inputImage) async {
+  Future<void> _processImage(InputImage inputImage) async {
     if (!_canProcess) return;
     if (_isBusy) return;
     _isBusy = true;
@@ -44,12 +49,13 @@ class _TextRecognizerPageState extends State<TextRecognizerPage> {
       _text = '';
     });
     final recognizedText = await _textRecognizer.processImage(inputImage);
-    if (inputImage.inputImageData?.size != null &&
-        inputImage.inputImageData?.imageRotation != null) {
+
+    if (inputImage.metadata?.size != null &&
+        inputImage.metadata?.rotation != null) {
       final painter = TextRecognizerPainter(
         recognizedText,
-        inputImage.inputImageData!.size,
-        inputImage.inputImageData!.imageRotation,
+        inputImage.metadata!.size,
+        inputImage.metadata!.rotation,
       );
       _customPaint = CustomPaint(painter: painter);
     } else {

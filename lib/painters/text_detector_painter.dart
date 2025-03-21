@@ -23,7 +23,7 @@ class TextRecognizerPainter extends CustomPainter {
     final Paint paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.0
-      ..color = Colors.red;
+      ..color = Color.fromARGB(100, 3, 169, 244);
 
     final Paint background = Paint()..color = const Color(0x99000000);
 
@@ -36,7 +36,8 @@ class TextRecognizerPainter extends CustomPainter {
         ),
       );
       builder.pushStyle(
-        ui.TextStyle(color: Colors.red, background: background),
+        ui.TextStyle(
+            color: Color.fromARGB(100, 3, 169, 244), background: background),
       );
       builder.addText(textBlock.text);
       builder.pop();

@@ -1,70 +1,66 @@
 import 'dart:io';
 
 import 'package:camera/camera.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:google_mlkit_commons/google_mlkit_commons.dart'
-    show
-        InputImage,
-        InputImageData,
-        InputImageFormatValue,
-        InputImagePlaneMetadata,
-        InputImageRotationValue;
-import 'package:image_picker/image_picker.dart';
-import 'package:text_detector_google_ml_kit/main.dart';
+import 'package:flutter/services.dart';
+import 'package:google_mlkit_commons/google_mlkit_commons.dart';
 
 enum ScreenMode { liveFeed, gallery }
 
-class CameraViewPage extends StatefulWidget {
-  const CameraViewPage({
+class CameraView extends StatefulWidget {
+  const CameraView({
     Key? key,
-    required this.title,
     required this.customPaint,
-    this.text,
     required this.onImage,
-    this.onScreenModeChanged,
-    this.initialDirection = CameraLensDirection.back,
+    this.onCameraFeedReady,
+    this.onDetectorViewModeChanged,
+    this.onCameraLensDirectionChanged,
+    this.initialCameraLensDirection = CameraLensDirection.back,
   }) : super(key: key);
 
-  final String title;
   final CustomPaint? customPaint;
-  final String? text;
   final Function(InputImage inputImage) onImage;
-  final Function(ScreenMode mode)? onScreenModeChanged;
-  final CameraLensDirection initialDirection;
+  final VoidCallback? onCameraFeedReady;
+  final VoidCallback? onDetectorViewModeChanged;
+  final Function(CameraLensDirection direction)? onCameraLensDirectionChanged;
+  final CameraLensDirection initialCameraLensDirection;
 
   @override
-  _CameraViewPageState createState() => _CameraViewPageState();
+  _CameraViewState createState() => _CameraViewState();
 }
 
-class _CameraViewPageState extends State<CameraViewPage> {
-  ScreenMode _mode = ScreenMode.liveFeed;
+class _CameraViewState extends State<CameraView> {
+  static List<CameraDescription> _cameras = [];
   CameraController? _controller;
-  File? _image;
-  String? _path;
-  ImagePicker? _imagePicker;
-  int _cameraIndex = 0;
-  double zoomLevel = 0.0, minZoomLevel = 0.0, maxZoomLevel = 0.0;
-  final bool _allowPicker = true;
+  int _cameraIndex = -1;
+  double _currentZoomLevel = 1.0;
+  double _minAvailableZoom = 1.0;
+  double _maxAvailableZoom = 1.0;
+  double _minAvailableExposureOffset = 0.0;
+  double _maxAvailableExposureOffset = 0.0;
+  double _currentExposureOffset = 0.0;
   bool _changingCameraLens = false;
 
   @override
   void initState() {
     super.initState();
 
-    _imagePicker = ImagePicker();
+    _initialize();
+  }
 
-    _cameraIndex = cameras.any((element) =>
-            element.lensDirection == widget.initialDirection &&
-            element.sensorOrientation == 90)
-        ? cameras.indexOf(cameras.firstWhere((element) =>
-            element.lensDirection == widget.initialDirection &&
-            element.sensorOrientation == 90))
-        : cameras.indexOf(cameras.firstWhere(
-            (element) => element.lensDirection == widget.initialDirection,
-          ));
-
-    _startLiveFeed();
+  void _initialize() async {
+    if (_cameras.isEmpty) {
+      _cameras = await availableCameras();
+    }
+    for (var i = 0; i < _cameras.length; i++) {
+      if (_cameras[i].lensDirection == widget.initialCameraLensDirection) {
+        _cameraIndex = i;
+        break;
+      }
+    }
+    if (_cameraIndex != -1) {
+      _startLiveFeed();
+    }
   }
 
   @override
@@ -75,200 +71,232 @@ class _CameraViewPageState extends State<CameraViewPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-        actions: [
-          if (_allowPicker)
-            Padding(
-              padding: const EdgeInsets.only(right: 20.0),
-              child: GestureDetector(
-                onTap: _switchScreenMode,
-                child: Icon(
-                  _mode == ScreenMode.liveFeed
-                      ? Icons.photo_library_outlined
-                      : (Platform.isIOS
-                          ? Icons.camera_alt_outlined
-                          : Icons.camera),
-                ),
-              ),
-            ),
-        ],
-      ),
-      body: _body(),
-      floatingActionButton: _floatingActionButton(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-    );
-  }
-
-  Widget? _floatingActionButton() {
-    if (_mode == ScreenMode.gallery) return null;
-    if (cameras.length == 1) return null;
-    // ignore: newline-before-return
-    return SizedBox(
-      height: 70.0,
-      width: 70.0,
-      child: FloatingActionButton(
-        onPressed: _switchLiveCamera,
-        child: Icon(
-          Platform.isIOS
-              ? Icons.flip_camera_ios_outlined
-              : Icons.flip_camera_android_outlined,
-          size: 40,
-        ),
-      ),
-    );
-  }
-
-  Widget _body() {
-    return _mode == ScreenMode.liveFeed ? _liveFeedBody() : _galleryBody();
+    return Scaffold(body: _liveFeedBody());
   }
 
   Widget _liveFeedBody() {
-    if (_controller?.value.isInitialized == false) {
-      return Container();
-    }
-
-    final size = MediaQuery.of(context).size;
-    // calculate scale depending on screen and camera ratios
-    // this is actually size.aspectRatio / (1 / camera.aspectRatio)
-    // because camera preview size is received as landscape
-    // but we're calculating for portrait orientation
-    var scale = size.aspectRatio * _controller!.value.aspectRatio;
-
-    // to prevent scaling down, invert the value
-    if (scale < 1) scale = 1 / scale;
-
-    return Container(
+    if (_cameras.isEmpty) return Container();
+    if (_controller == null) return Container();
+    if (_controller?.value.isInitialized == false) return Container();
+    return ColoredBox(
       color: Colors.black,
       child: Stack(
         fit: StackFit.expand,
         children: <Widget>[
-          Transform.scale(
-            scale: scale,
-            child: Center(
-              child: _changingCameraLens
-                  ? const Center(
-                      child: Text('Changing camera lens'),
-                    )
-                  : CameraPreview(_controller!),
-            ),
+          Center(
+            child: _changingCameraLens
+                ? Center(
+                    child: const Text('Trocando a lente da câmera'),
+                  )
+                : CameraPreview(
+                    _controller!,
+                    child: widget.customPaint,
+                  ),
           ),
-          if (widget.customPaint != null) widget.customPaint!,
-          Positioned(
-            bottom: 100,
-            left: 50,
-            right: 50,
-            child: Slider(
-              value: zoomLevel,
-              min: minZoomLevel,
-              max: maxZoomLevel,
-              onChanged: (newSliderValue) {
-                setState(() {
-                  zoomLevel = newSliderValue;
-                  _controller!.setZoomLevel(zoomLevel);
-                });
-              },
-              divisions: (maxZoomLevel - 1).toInt() < 1
-                  ? null
-                  : (maxZoomLevel - 1).toInt(),
-            ),
-          ),
+          _backButton(),
+          _switchLiveCameraToggle(),
+          _detectionViewModeToggle(),
+          _zoomControl(),
+          _exposureControl(),
         ],
       ),
     );
   }
 
-  Widget _galleryBody() {
-    return ListView(shrinkWrap: true, children: [
-      _image != null
-          ? SizedBox(
-              height: 400,
-              width: 400,
-              child: Stack(
-                fit: StackFit.expand,
-                children: <Widget>[
-                  Image.file(_image!),
-                  if (widget.customPaint != null) widget.customPaint!,
-                ],
+  Widget _backButton() => Positioned(
+        top: 40,
+        left: 8,
+        child: SizedBox(
+          height: 50.0,
+          width: 50.0,
+          child: FloatingActionButton(
+            heroTag: Object(),
+            onPressed: () => Navigator.of(context).pop(),
+            backgroundColor: Color.fromARGB(100, 3, 169, 244),
+            child: Icon(
+              Icons.arrow_back_ios_outlined,
+              size: 20,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      );
+
+  Widget _detectionViewModeToggle() => Positioned(
+        bottom: 8,
+        left: 8,
+        child: SizedBox(
+          height: 50.0,
+          width: 50.0,
+          child: FloatingActionButton(
+            heroTag: Object(),
+            onPressed: widget.onDetectorViewModeChanged,
+            backgroundColor: Color.fromARGB(100, 3, 169, 244),
+            child: Icon(
+              Icons.photo_library_outlined,
+              size: 25,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      );
+
+  Widget _switchLiveCameraToggle() => Positioned(
+        bottom: 8,
+        right: 8,
+        child: SizedBox(
+          height: 50.0,
+          width: 50.0,
+          child: FloatingActionButton(
+            heroTag: Object(),
+            onPressed: _switchLiveCamera,
+            backgroundColor: Color.fromARGB(100, 3, 169, 244),
+            child: Icon(
+              Platform.isIOS
+                  ? Icons.flip_camera_ios_outlined
+                  : Icons.flip_camera_android_outlined,
+              size: 25,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      );
+
+  Widget _zoomControl() => Positioned(
+        bottom: 16,
+        left: 0,
+        right: 0,
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: SizedBox(
+            width: 230,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Slider(
+                    value: _currentZoomLevel,
+                    min: _minAvailableZoom,
+                    max: _maxAvailableZoom,
+                    activeColor: Colors.white,
+                    inactiveColor: Colors.white30,
+                    onChanged: (value) async {
+                      setState(() {
+                        _currentZoomLevel = value;
+                      });
+                      await _controller?.setZoomLevel(value);
+                    },
+                  ),
+                ),
+                Container(
+                  width: 50,
+                  decoration: BoxDecoration(
+                    color: Color.fromARGB(100, 3, 169, 244),
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Center(
+                      child: Text(
+                        '${_currentZoomLevel.toStringAsFixed(1)}x',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+  Widget _exposureControl() => Positioned(
+        top: 40,
+        right: 8,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: 250,
+          ),
+          child: Column(children: [
+            Container(
+              width: 55,
+              decoration: BoxDecoration(
+                color: Color.fromARGB(100, 3, 169, 244),
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Center(
+                  child: Text(
+                    '${_currentExposureOffset.toStringAsFixed(1)}x',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: RotatedBox(
+                quarterTurns: 3,
+                child: SizedBox(
+                  height: 30,
+                  child: Slider(
+                    value: _currentExposureOffset,
+                    min: _minAvailableExposureOffset,
+                    max: _maxAvailableExposureOffset,
+                    activeColor: Colors.white,
+                    inactiveColor: Colors.white30,
+                    onChanged: (value) async {
+                      setState(() {
+                        _currentExposureOffset = value;
+                      });
+                      await _controller?.setExposureOffset(value);
+                    },
+                  ),
+                ),
               ),
             )
-          : const Icon(
-              Icons.image,
-              size: 200,
-            ),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: ElevatedButton(
-          child: const Text(
-            'Para a galeria de fotos',
-          ),
-          onPressed: () => _getImage(ImageSource.gallery),
+          ]),
         ),
-      ),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: ElevatedButton(
-          child: const Text('Tirar foto'),
-          onPressed: () => _getImage(ImageSource.camera),
-        ),
-      ),
-      if (_image != null)
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(
-            '${_path == null ? '' : 'Caminho da imagem: $_path'}\n\n${widget.text ?? ''}',
-          ),
-        ),
-    ]);
-  }
-
-  Future _getImage(ImageSource source) async {
-    setState(() {
-      _image = null;
-      _path = null;
-    });
-    final pickedFile = await _imagePicker?.pickImage(source: source);
-    if (pickedFile != null) {
-      _processPickedFile(pickedFile);
-    }
-    setState(() {});
-  }
-
-  void _switchScreenMode() {
-    _image = null;
-    if (_mode == ScreenMode.liveFeed) {
-      _mode = ScreenMode.gallery;
-      _stopLiveFeed();
-    } else {
-      _mode = ScreenMode.liveFeed;
-      _startLiveFeed();
-    }
-    if (widget.onScreenModeChanged != null) {
-      widget.onScreenModeChanged!(_mode);
-    }
-    setState(() {});
-  }
+      );
 
   Future _startLiveFeed() async {
-    final camera = cameras[_cameraIndex];
+    final camera = _cameras[_cameraIndex];
     _controller = CameraController(
       camera,
+      // Set to ResolutionPreset.high. Do NOT set it to ResolutionPreset.max because for some phones does NOT work.
       ResolutionPreset.high,
       enableAudio: false,
+      imageFormatGroup: Platform.isAndroid
+          ? ImageFormatGroup.nv21
+          : ImageFormatGroup.bgra8888,
     );
     _controller?.initialize().then((_) {
       if (!mounted) {
         return;
       }
       _controller?.getMinZoomLevel().then((value) {
-        zoomLevel = value;
-        minZoomLevel = value;
+        _currentZoomLevel = value;
+        _minAvailableZoom = value;
       });
       _controller?.getMaxZoomLevel().then((value) {
-        maxZoomLevel = value;
+        _maxAvailableZoom = value;
       });
-      _controller?.startImageStream(_processCameraImage);
+      _currentExposureOffset = 0.0;
+      _controller?.getMinExposureOffset().then((value) {
+        _minAvailableExposureOffset = value;
+      });
+      _controller?.getMaxExposureOffset().then((value) {
+        _maxAvailableExposureOffset = value;
+      });
+      _controller?.startImageStream(_processCameraImage).then((value) {
+        if (widget.onCameraFeedReady != null) {
+          widget.onCameraFeedReady!();
+        }
+        if (widget.onCameraLensDirectionChanged != null) {
+          widget.onCameraLensDirectionChanged!(camera.lensDirection);
+        }
+      });
       setState(() {});
     });
   }
@@ -281,71 +309,81 @@ class _CameraViewPageState extends State<CameraViewPage> {
 
   Future _switchLiveCamera() async {
     setState(() => _changingCameraLens = true);
-    _cameraIndex = (_cameraIndex + 1) % cameras.length;
+    _cameraIndex = (_cameraIndex + 1) % _cameras.length;
 
     await _stopLiveFeed();
     await _startLiveFeed();
     setState(() => _changingCameraLens = false);
   }
 
-  Future _processPickedFile(XFile? pickedFile) async {
-    final path = pickedFile?.path;
-    if (path == null) {
-      return;
-    }
-    setState(() {
-      _image = File(path);
-    });
-    _path = path;
-    final inputImage = InputImage.fromFilePath(path);
+  void _processCameraImage(CameraImage image) {
+    final inputImage = _inputImageFromCameraImage(image);
+    if (inputImage == null) return;
     widget.onImage(inputImage);
   }
 
-  Future _processCameraImage(CameraImage image) async {
-    final WriteBuffer allBytes = WriteBuffer();
-    for (final Plane plane in image.planes) {
-      allBytes.putUint8List(plane.bytes);
+  final _orientations = {
+    DeviceOrientation.portraitUp: 0,
+    DeviceOrientation.landscapeLeft: 90,
+    DeviceOrientation.portraitDown: 180,
+    DeviceOrientation.landscapeRight: 270,
+  };
+
+  InputImage? _inputImageFromCameraImage(CameraImage image) {
+    if (_controller == null) return null;
+
+    // get image rotation
+    // it is used in android to convert the InputImage from Dart to Java: https://github.com/flutter-ml/google_ml_kit_flutter/blob/master/packages/google_mlkit_commons/android/src/main/java/com/google_mlkit_commons/InputImageConverter.java
+    // `rotation` is not used in iOS to convert the InputImage from Dart to Obj-C: https://github.com/flutter-ml/google_ml_kit_flutter/blob/master/packages/google_mlkit_commons/ios/Classes/MLKVisionImage%2BFlutterPlugin.m
+    // in both platforms `rotation` and `camera.lensDirection` can be used to compensate `x` and `y` coordinates on a canvas: https://github.com/flutter-ml/google_ml_kit_flutter/blob/master/packages/example/lib/vision_detector_views/painters/coordinates_translator.dart
+    final camera = _cameras[_cameraIndex];
+    final sensorOrientation = camera.sensorOrientation;
+    // print(
+    //     'lensDirection: ${camera.lensDirection}, sensorOrientation: $sensorOrientation, ${_controller?.value.deviceOrientation} ${_controller?.value.lockedCaptureOrientation} ${_controller?.value.isCaptureOrientationLocked}');
+    InputImageRotation? rotation;
+    if (Platform.isIOS) {
+      rotation = InputImageRotationValue.fromRawValue(sensorOrientation);
+    } else if (Platform.isAndroid) {
+      var rotationCompensation =
+          _orientations[_controller!.value.deviceOrientation];
+      if (rotationCompensation == null) return null;
+      if (camera.lensDirection == CameraLensDirection.front) {
+        // front-facing
+        rotationCompensation = (sensorOrientation + rotationCompensation) % 360;
+      } else {
+        // back-facing
+        rotationCompensation =
+            (sensorOrientation - rotationCompensation + 360) % 360;
+      }
+      rotation = InputImageRotationValue.fromRawValue(rotationCompensation);
+      // print('rotationCompensation: $rotationCompensation');
     }
-    final bytes = allBytes.done().buffer.asUint8List();
+    if (rotation == null) return null;
+    // print('final rotation: $rotation');
 
-    final Size imageSize = Size(
-      image.width.toDouble(),
-      image.height.toDouble(),
+    // get image format
+    final format = InputImageFormatValue.fromRawValue(image.format.raw);
+    // validate format depending on platform
+    // only supported formats:
+    // * nv21 for Android
+    // * bgra8888 for iOS
+    if (format == null ||
+        (Platform.isAndroid && format != InputImageFormat.nv21) ||
+        (Platform.isIOS && format != InputImageFormat.bgra8888)) return null;
+
+    // since format is constraint to nv21 or bgra8888, both only have one plane
+    if (image.planes.length != 1) return null;
+    final plane = image.planes.first;
+
+    // compose InputImage using bytes
+    return InputImage.fromBytes(
+      bytes: plane.bytes,
+      metadata: InputImageMetadata(
+        size: Size(image.width.toDouble(), image.height.toDouble()),
+        rotation: rotation, // used only in Android
+        format: format, // used only in iOS
+        bytesPerRow: plane.bytesPerRow, // used only in iOS
+      ),
     );
-
-    final camera = cameras[_cameraIndex];
-    final imageRotation = InputImageRotationValue.fromRawValue(
-      camera.sensorOrientation,
-    );
-    if (imageRotation == null) return;
-
-    final inputImageFormat = InputImageFormatValue.fromRawValue(
-      image.format.raw,
-    );
-    if (inputImageFormat == null) return;
-
-    final planeData = image.planes.map(
-      (Plane plane) {
-        return InputImagePlaneMetadata(
-          bytesPerRow: plane.bytesPerRow,
-          height: plane.height,
-          width: plane.width,
-        );
-      },
-    ).toList();
-
-    final inputImageData = InputImageData(
-      size: imageSize,
-      imageRotation: imageRotation,
-      inputImageFormat: inputImageFormat,
-      planeData: planeData,
-    );
-
-    final inputImage = InputImage.fromBytes(
-      bytes: bytes,
-      inputImageData: inputImageData,
-    );
-
-    widget.onImage(inputImage);
   }
 }
