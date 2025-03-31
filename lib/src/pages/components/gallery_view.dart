@@ -1,3 +1,5 @@
+// ignore_for_file: depend_on_referenced_packages
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -5,7 +7,7 @@ import 'package:google_mlkit_commons/google_mlkit_commons.dart';
 import 'package:image_picker/image_picker.dart';
 
 class GalleryView extends StatefulWidget {
-  GalleryView(
+  const GalleryView(
       {Key? key,
       required this.title,
       this.text,

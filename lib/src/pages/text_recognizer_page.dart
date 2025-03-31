@@ -2,7 +2,6 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:text_detector_google_ml_kit/painters/text_detector_painter.dart';
-import 'package:text_detector_google_ml_kit/src/pages/components/camera_view.dart';
 
 import 'components/detector_view.dart';
 
@@ -14,8 +13,7 @@ class TextRecognizerPage extends StatefulWidget {
 }
 
 class _TextRecognizerPageState extends State<TextRecognizerPage> {
-  var _script = TextRecognitionScript.latin;
-  var _textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
+  final _textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
   bool _canProcess = true;
   bool _isBusy = false;
   CustomPaint? _customPaint;
