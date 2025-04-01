@@ -15,7 +15,7 @@ plugins {
 }
 
 android {
-    namespace = "com.davi.dev.text_detector_google_ml_kit"
+    namespace = "com.example.text_detector_google_ml_kit"
     compileSdk = 34
     ndkVersion = "27.0.12077973"
 
