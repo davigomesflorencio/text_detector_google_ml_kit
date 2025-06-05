@@ -33,10 +33,10 @@ android {
         applicationId = "com.davi.dev.text_detector_google_ml_kit"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        minSdk = 31
         targetSdk = 35
-        versionCode = 5
-        versionName = "2.2.0"
+        versionCode = 6
+        versionName = "2.3.0"
     }
 
     signingConfigs {
