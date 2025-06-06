@@ -81,9 +81,6 @@ class _TextRecognizerPageState extends State<TextRecognizerPage> {
       _handleError(e.message ?? 'Tempo limite excedido');
     } on Exception catch (e) {
       _handleError('Erro no processamento: ${e.toString()}');
-    } finally {
-      _isBusy = false;
-      if (mounted) setState(() {});
     }
   }
 
