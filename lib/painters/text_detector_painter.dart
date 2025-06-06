@@ -1,5 +1,5 @@
-import 'dart:ui';
 import 'dart:ui' as ui;
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
@@ -36,8 +36,7 @@ class TextRecognizerPainter extends CustomPainter {
         ),
       );
       builder.pushStyle(
-        ui.TextStyle(
-            color: Color.fromARGB(100, 3, 169, 244), background: background),
+        ui.TextStyle(color: Color.fromARGB(100, 3, 169, 244), background: background),
       );
       builder.addText(textBlock.text);
       builder.pop();
