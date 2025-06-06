@@ -1,6 +1,6 @@
 # App de detecção de texto com o Kit de Machine Learning do Google
 
-## Novidades
+## Novidades - Versão 2.4.0
 
 - Novo design
 - Aprimoramento do código
@@ -45,13 +45,15 @@ Um plugin Flutter para usar o ML Kit Text Recognition do Google para reconhecer 
 ## Preview
 
 <div>
-<img src="assets/print3.jpg" alt="drawing" style="width:200px;"/>
-<img src="assets/print7.jpg" alt="drawing" style="width:200px;"/>
+<img src="assets/2.3.0/print1.jpg" alt="drawing" style="width:200px;"/>
+<img src="assets/2.3.0/print2.jpg" alt="drawing" style="width:200px;"/>
+<img src="assets/2.3.0/print3.jpg" alt="drawing" style="width:200px;"/>
 <div>
 
 <div>
-<img src="assets/print5.jpg" alt="drawing" style="width:200px;"/>
-<img src="assets/print6.jpg" alt="drawing" style="width:200px;"/>
+<img src="assets/2.3.0/print4.jpg" alt="drawing" style="width:200px;"/>
+<img src="assets/2.3.0/print5.jpg" alt="drawing" style="width:200px;"/>
+<img src="assets/2.3.0/print6.jpg" alt="drawing" style="width:200px;"/>
 <div>
 
 ## Começando
