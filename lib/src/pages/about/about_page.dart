@@ -77,7 +77,7 @@ class _AboutPageState extends State<AboutPage> {
                   textAlign: TextAlign.center,
                 ),
                 subtitle: Text(
-                  '2.3.0',
+                  '2.4.0',
                   textAlign: TextAlign.center,
                 ),
               ),
