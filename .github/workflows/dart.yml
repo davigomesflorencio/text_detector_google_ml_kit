@@ -56,6 +56,6 @@ jobs:
         with:
           files: build/app-release.apk
           tag_name: v2.2.${{ github.run_number }}
-          release_name: "Release v2.2.${{ github.run_number }}"
+          release_name: "Release v2.3.${{ github.run_number }}"
           draft: false
           prerelease: false
