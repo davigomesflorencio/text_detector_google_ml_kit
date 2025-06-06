@@ -2,9 +2,10 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-// ignore: depend_on_referenced_packages
+import 'package:flutter/services.dart'; // ignore: depend_on_referenced_packages
 import 'package:google_mlkit_commons/google_mlkit_commons.dart';
+import 'package:store_redirect/store_redirect.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 enum ScreenMode { liveFeed, gallery }
 
@@ -73,7 +74,108 @@ class _CameraViewState extends State<CameraView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: _liveFeedBody());
+    return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Color.fromARGB(100, 3, 169, 244),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Image(
+                image: AssetImage('assets/icon.png'),
+                width: 40,
+                height: 40,
+              ),
+              SizedBox(width: 8),
+              Text(
+                'Text Detector MLKIT',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 18,
+                ),
+              )
+            ],
+          ),
+          actions: [
+            PopupMenuButton(
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  child: ListTile(
+                    leading: Icon(Icons.privacy_tip, color: Colors.blue),
+                    title: Text('Politica de privacidade'),
+                    onTap: () {
+                      Future.delayed(Duration(milliseconds: 200), () {
+                        Navigator.pushNamed(context, '/privacy');
+                      });
+                    },
+                  ),
+                ),
+                PopupMenuItem(
+                  child: ListTile(
+                    leading: Icon(Icons.email, color: Colors.blue),
+                    title: Text('Suporte'),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      final Uri emailLaunchUri = Uri(
+                        scheme: 'mailto',
+                        path: 'davigomesflorencio@gmail.com',
+                        queryParameters: {
+                          'subject': 'Solicitação de suporte',
+                          'body': 'Por favor descreva sua solicitação:\n\n',
+                        },
+                      );
+
+                      if (await launchUrl(emailLaunchUri)) {
+                        await launchUrl(emailLaunchUri);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Não foi possível iniciar o cliente de e-mail')),
+                        );
+                      }
+                    },
+                  ),
+                ),
+                PopupMenuItem(
+                  child: ListTile(
+                    leading: Icon(Icons.star, color: Colors.amber),
+                    title: Text('Avaliar o aplicativo'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _rateApp(context);
+                    },
+                  ),
+                ),
+                PopupMenuItem(
+                  child: ListTile(
+                    leading: Icon(Icons.info, color: Colors.green),
+                    title: Text('Sobre'),
+                    onTap: () {
+                      Future.delayed(Duration(milliseconds: 200), () {
+                        Navigator.pushNamed(context, '/about');
+                      });
+                    },
+                  ),
+                ),
+                PopupMenuItem(
+                  child: ListTile(
+                    leading: Icon(Icons.code, color: Colors.grey),
+                    title: Text('Versão'),
+                    subtitle: Text("2.3.0"),
+                    onTap: () {
+                      Navigator.pop(context);
+                      // Navigate to privacy policy
+                    },
+                  ),
+                ),
+              ],
+              icon: Icon(
+                Icons.more_vert,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+        body: _liveFeedBody());
   }
 
   Widget _liveFeedBody() {
@@ -105,25 +207,6 @@ class _CameraViewState extends State<CameraView> {
     );
   }
 
-  Widget _backButton() => Positioned(
-        top: 40,
-        left: 8,
-        child: SizedBox(
-          height: 50.0,
-          width: 50.0,
-          child: FloatingActionButton(
-            heroTag: Object(),
-            onPressed: () => Navigator.of(context).pop(),
-            backgroundColor: Color.fromARGB(100, 3, 169, 244),
-            child: Icon(
-              Icons.arrow_back_ios_outlined,
-              size: 20,
-              color: Colors.white,
-            ),
-          ),
-        ),
-      );
-
   Widget _detectionViewModeToggle() => Positioned(
         bottom: 8,
         left: 8,
@@ -154,9 +237,7 @@ class _CameraViewState extends State<CameraView> {
             onPressed: _switchLiveCamera,
             backgroundColor: Color.fromARGB(100, 3, 169, 244),
             child: Icon(
-              Platform.isIOS
-                  ? Icons.flip_camera_ios_outlined
-                  : Icons.flip_camera_android_outlined,
+              Platform.isIOS ? Icons.flip_camera_ios_outlined : Icons.flip_camera_android_outlined,
               size: 25,
               color: Colors.white,
             ),
@@ -269,9 +350,7 @@ class _CameraViewState extends State<CameraView> {
       // Set to ResolutionPreset.high. Do NOT set it to ResolutionPreset.max because for some phones does NOT work.
       ResolutionPreset.medium,
       enableAudio: false,
-      imageFormatGroup: Platform.isAndroid
-          ? ImageFormatGroup.nv21
-          : ImageFormatGroup.bgra8888,
+      imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888,
     );
     _controller?.initialize().then((_) {
       if (!mounted) {
@@ -346,16 +425,14 @@ class _CameraViewState extends State<CameraView> {
     if (Platform.isIOS) {
       rotation = InputImageRotationValue.fromRawValue(sensorOrientation);
     } else if (Platform.isAndroid) {
-      var rotationCompensation =
-          _orientations[_controller!.value.deviceOrientation];
+      var rotationCompensation = _orientations[_controller!.value.deviceOrientation];
       if (rotationCompensation == null) return null;
       if (camera.lensDirection == CameraLensDirection.front) {
         // front-facing
         rotationCompensation = (sensorOrientation + rotationCompensation) % 360;
       } else {
         // back-facing
-        rotationCompensation =
-            (sensorOrientation - rotationCompensation + 360) % 360;
+        rotationCompensation = (sensorOrientation - rotationCompensation + 360) % 360;
       }
       rotation = InputImageRotationValue.fromRawValue(rotationCompensation);
       // print('rotationCompensation: $rotationCompensation');
@@ -389,5 +466,30 @@ class _CameraViewState extends State<CameraView> {
         bytesPerRow: plane.bytesPerRow, // used only in iOS
       ),
     );
+  }
+
+  Future<void> _rateApp(BuildContext context) async {
+    const packageName = 'com.davi.dev.text_detector_google_ml_kit';
+
+    try {
+      if (Theme.of(context).platform == TargetPlatform.android) {
+        await StoreRedirect.redirect(
+          androidAppId: packageName,
+        );
+      }
+    } catch (e) {
+      // Fallback to web browser if app store fails
+      final webUrl = Uri.parse(Theme.of(context).platform == TargetPlatform.android
+          ? 'https://play.google.com/store/apps/details?id=$packageName'
+          : 'https://apps.apple.com/app/idYOUR_APP_ID');
+
+      if (await canLaunchUrl(webUrl)) {
+        await launchUrl(webUrl, mode: LaunchMode.externalApplication);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Não foi possível iniciar a loja de aplicativos')),
+        );
+      }
+    }
   }
 }

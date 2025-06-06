@@ -57,10 +57,7 @@ class _DetectorViewState extends State<DetectorView> {
             onCameraLensDirectionChanged: widget.onCameraLensDirectionChanged,
           )
         : GalleryView(
-            title: widget.title,
-            text: widget.text,
-            onImage: widget.onImage,
-            onDetectorViewModeChanged: _onDetectorViewModeChanged);
+            title: widget.title, text: widget.text, onImage: widget.onImage, onDetectorViewModeChanged: _onDetectorViewModeChanged);
   }
 
   void _onDetectorViewModeChanged() {
