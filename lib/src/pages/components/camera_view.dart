@@ -160,7 +160,7 @@ class _CameraViewState extends State<CameraView> {
                   child: ListTile(
                     leading: Icon(Icons.code, color: Colors.grey),
                     title: Text('Versão'),
-                    subtitle: Text("2.4.0"),
+                    subtitle: Text("2.5.0"),
                     onTap: () {
                       Navigator.pop(context);
                       // Navigate to privacy policy

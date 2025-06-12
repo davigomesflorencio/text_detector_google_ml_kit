@@ -24,6 +24,7 @@ class _GalleryViewState extends State<GalleryView> {
   File? _image;
   String? _path;
   ImagePicker? _imagePicker;
+  bool _isProcessing = false;
 
   @override
   void initState() {
@@ -134,6 +135,7 @@ class _GalleryViewState extends State<GalleryView> {
           onPressed: () => _getImage(ImageSource.camera),
         ),
       ),
+      if (_isProcessing) CircularProgressIndicator(),
       if (_image != null)
         Padding(
           padding: const EdgeInsets.all(16.0),
@@ -142,23 +144,68 @@ class _GalleryViewState extends State<GalleryView> {
     ]);
   }
 
-  Future _getImage(ImageSource source) async {
+  Future<void> _getImage(ImageSource source) async {
+    if (_isProcessing) return;
+
     setState(() {
+      _isProcessing = true;
       _image = null;
       _path = null;
     });
-    final pickedFile = await _imagePicker?.pickImage(source: source);
-    if (pickedFile != null) {
-      _processFile(pickedFile.path);
+
+    try {
+      final pickedFile = await _imagePicker?.pickImage(source: source);
+
+      if (pickedFile != null) {
+        await _processFile(pickedFile.path);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Nenhuma imagem selecionada.')),
+          );
+        }
+      }
+    } on PlatformException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Falha ao obter imagem: ${e.message}')),
+        );
+      }
+      print('PlatformException ao obter imagem: ${e.toString()}');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ocorreu um erro: ${e.toString()}')),
+        );
+      }
+      print('Erro ao obter imagem: ${e.toString()}');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
+      }
     }
   }
 
-  Future _processFile(String path) async {
+  Future<void> _processFile(String path) async {
+    if (!mounted) return;
+
     setState(() {
       _image = File(path);
+      _path = path;
     });
-    _path = path;
-    final inputImage = InputImage.fromFilePath(path);
-    widget.onImage(inputImage);
+
+    try {
+      final inputImage = InputImage.fromFilePath(path);
+      await widget.onImage(inputImage);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao processar imagem: ${e.toString()}')),
+        );
+      }
+      print('Erro ao processar arquivo: ${e.toString()}');
+    }
   }
 }
