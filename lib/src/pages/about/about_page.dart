@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class AboutPage extends StatefulWidget {
   const AboutPage({Key? key}) : super(key: key);
@@ -8,6 +9,22 @@ class AboutPage extends StatefulWidget {
 }
 
 class _AboutPageState extends State<AboutPage> {
+  String _version = 'N/A';
+
+  @override
+  void initState() {
+    super.initState();
+
+    _initPackageInfo();
+  }
+
+  Future<void> _initPackageInfo() async {
+    final PackageInfo info = await PackageInfo.fromPlatform();
+    setState(() {
+      _version = info.version;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,7 +94,7 @@ class _AboutPageState extends State<AboutPage> {
                   textAlign: TextAlign.center,
                 ),
                 subtitle: Text(
-                  '2.5.0',
+                  _version,
                   textAlign: TextAlign.center,
                 ),
               ),

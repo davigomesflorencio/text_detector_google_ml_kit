@@ -1,6 +1,6 @@
 # App de detecção de texto com o Kit de Machine Learning do Google
 
-## Novidades - Versão 2.5.0
+## Novidades - Versão 2.6.0
 
 - Novo design
 - Aprimoramento do código

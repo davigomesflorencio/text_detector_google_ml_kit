@@ -68,7 +68,7 @@ class _TextRecognizerPageState extends State<TextRecognizerPage> {
         );
         _customPaint = CustomPaint(painter: painter);
       } else {
-        _text = 'Texto reconhecido:\n\n${recognizedText.text}';
+        _text = recognizedText.text;
         _customPaint = null;
       }
       _isBusy = false;
