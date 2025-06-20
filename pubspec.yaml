@@ -1,7 +1,7 @@
 name: text_detector_google_ml_kit
 description: "App desenvolvido em flutter para reconhecimentos de textos"
 
-version: 2.4.0+1
+version: 2.6.2+1
 
 environment:
   sdk: ">=2.15.0 <4.0.0"
