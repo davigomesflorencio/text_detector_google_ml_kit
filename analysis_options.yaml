@@ -28,6 +28,9 @@ linter:
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options
 analyzer:
+  exclude:
+    - build/**
+    - android/**
   plugins:
     - dart_code_metrics
  
