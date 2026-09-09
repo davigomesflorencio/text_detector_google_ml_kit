@@ -16,8 +16,8 @@ plugins {
 
 android {
     namespace = "com.example.text_detector_google_ml_kit"
-    compileSdk = 35
-    ndkVersion = "27.0.12077973"
+    compileSdk = 36
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -35,8 +35,8 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 34
         targetSdk = 35
-        versionCode = 11
-        versionName = "2.6.2"
+        versionCode = 12
+        versionName = "3.0.0"
     }
 
     signingConfigs {
