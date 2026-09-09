@@ -1,9 +1,12 @@
 # App de detecção de texto com o Kit de Machine Learning do Google
 
-## Novidades - Versão 2.6.0
+## Novidades - Versão 3.0.0
 
-- Novo design
-- Aprimoramento do código
+- Atualização de todas as dependências Flutter (Google ML Kit, Camera, Image Picker, Package Info Plus, Flutter Lints, entre outras)
+- Build Android migrado para **Android Gradle Plugin 9.0.1** e **Gradle 9.1.0**
+- Ajustes no pipeline de CI/CD (GitHub Actions)
+
+Veja o histórico completo de mudanças em [CHANGELOG.md](CHANGELOG.md).
 
 ## Descrição
 
