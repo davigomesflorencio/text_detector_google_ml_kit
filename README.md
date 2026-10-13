@@ -1,6 +1,13 @@
 # App de detecção de texto com o Kit de Machine Learning do Google
 
-## Novidades - Versão 3.0.0
+## Novidades - Versão 3.0.2
+
+- Nova tela de splash com a logo do app animada
+- Tela inicial redesenhada: conteúdo centralizado e descrição do app acima da logo
+- Resultado da detecção exibido em um card, com botão de copiar, contagem de palavras, linhas e caracteres, texto selecionável e informações do arquivo (nome, tamanho e caminho)
+- `targetSdk` do Android elevado para 36
+
+### Versão 3.0.0
 
 - Atualização de todas as dependências Flutter (Google ML Kit, Camera, Image Picker, Package Info Plus, Flutter Lints, entre outras)
 - Build Android migrado para **Android Gradle Plugin 9.0.1** e **Gradle 9.1.0**
@@ -12,7 +19,15 @@ Veja o histórico completo de mudanças em [CHANGELOG.md](CHANGELOG.md).
 
 Projeto desenvolvido para demonstrar a utilização da API que reconhece textos do Kit ML para Flutter do Google.
 
-Neste projeto uso o **KitML para Flutter do Google**, **Dart Code Metrics**, **ImagePicker**, **Path Provider** e **Camera**.
+Neste projeto uso o **KitML para Flutter do Google**, **ImagePicker**, **Path Provider** e **Camera**.
+
+## Funcionalidades
+
+- Reconhecimento de texto em imagens da galeria ou tiradas com a câmera
+- Reconhecimento de texto em tempo real pela câmera
+- Cópia do texto reconhecido para a área de transferência
+- Estatísticas do texto detectado (palavras, linhas e caracteres) e informações do arquivo analisado
+- Tela de splash animada, política de privacidade e página "Sobre"
 
 ## Tecnologias utilizadas
 
@@ -25,7 +40,7 @@ Neste projeto uso o **KitML para Flutter do Google**, **Dart Code Metrics**, **I
 
 </p>
 
-## Depedências Flutter utilizadas
+## Dependências Flutter utilizadas
 
 O **Kit ML para Flutter do Google** que é um conjunto de plugins Flutter que permitem que os aplicativos usem o Kit ML autônomo do Google.
 
@@ -48,16 +63,29 @@ Um plugin Flutter para usar o ML Kit Text Recognition do Google para reconhecer 
 ## Preview
 
 <div>
-<img src="assets/2.3.0/print1.jpg" alt="drawing" style="width:200px;"/>
-<img src="assets/2.3.0/print2.jpg" alt="drawing" style="width:200px;"/>
-<img src="assets/2.3.0/print3.jpg" alt="drawing" style="width:200px;"/>
-<div>
+<img src="assets/3.0.2/print1.jpg" alt="drawing" style="width:200px;"/>
+<img src="assets/3.0.2/print2.jpg" alt="drawing" style="width:200px;"/>
+</div>
 
 <div>
+<img src="assets/3.0.2/print3.jpg" alt="drawing" style="width:200px;"/>
 <img src="assets/2.3.0/print4.jpg" alt="drawing" style="width:200px;"/>
-<img src="assets/2.3.0/print5.jpg" alt="drawing" style="width:200px;"/>
-<img src="assets/2.3.0/print6.jpg" alt="drawing" style="width:200px;"/>
-<div>
+</div>
+
+## Como executar
+
+Pré-requisitos: Flutter (canal `stable`), JDK 21 e Android SDK 36.
+
+```bash
+flutter pub get
+flutter run
+```
+
+Para gerar o APK de release:
+
+```bash
+flutter build apk --release
+```
 
 ## Começando
 
