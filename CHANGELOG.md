@@ -30,8 +30,8 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ### Versão
 
-- `pubspec.yaml`: `3.0.0+12` → `3.0.1+13`
-- Android `versionCode`/`versionName`: `12` / `3.0.0` → `13` / `3.0.1`
+- `pubspec.yaml`: `3.0.0+12` → `3.0.2+14`
+- Android `versionCode`/`versionName`: `12` / `3.0.0` → `14` / `3.0.2`
 
 ## [3.0.0] - 2026-09-09
 
