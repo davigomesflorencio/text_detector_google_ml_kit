@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:text_detector_google_ml_kit/src/pages/about/about_page.dart';
 import 'package:text_detector_google_ml_kit/src/pages/home/text_recognizer_page.dart';
 import 'package:text_detector_google_ml_kit/src/pages/privacy/policy_privacy_page.dart';
+import 'package:text_detector_google_ml_kit/src/pages/splash/splash_page.dart';
 
 List<CameraDescription> cameras = [];
 void main() async {
@@ -26,9 +27,10 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: "/",
       routes: {
-        "/": (context) => SafeArea(child: TextRecognizerPage()),
-        "/privacy": (context) => SafeArea(child: PolicyPrivacyPage()),
-        "/about": (context) => SafeArea(child: AboutPage()),
+        "/": (context) => SplashPage(),
+        "/home": (context) => TextRecognizerPage(),
+        "/privacy": (context) => PolicyPrivacyPage(),
+        "/about": (context) => AboutPage(),
       },
     );
   }
