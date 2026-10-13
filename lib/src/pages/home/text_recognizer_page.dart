@@ -42,11 +42,11 @@ class _TextRecognizerPageState extends State<TextRecognizerPage> {
   }
 
   Future<void> _processImage2(InputImage inputImage) async {
-    try {
-      // Verificações iniciais
-      if (!_canProcess || _isBusy) return;
+    // Verificações iniciais
+    if (!_canProcess || _isBusy) return;
 
-      _isBusy = true;
+    _isBusy = true;
+    try {
       if (mounted) {
         setState(() {
           _text = '';
@@ -71,7 +71,6 @@ class _TextRecognizerPageState extends State<TextRecognizerPage> {
         _text = recognizedText.text;
         _customPaint = null;
       }
-      _isBusy = false;
       if (mounted) {
         setState(() {});
       }
@@ -81,6 +80,8 @@ class _TextRecognizerPageState extends State<TextRecognizerPage> {
       _handleError(e.message ?? 'Tempo limite excedido');
     } on Exception catch (e) {
       _handleError('Erro no processamento: ${e.toString()}');
+    } finally {
+      _isBusy = false;
     }
   }
 

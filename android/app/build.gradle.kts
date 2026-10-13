@@ -58,6 +58,11 @@ android {
             // Enables resource shrinking, which is performed by the
             // Android Gradle plugin.
             isShrinkResources = true
+
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
         release {
             signingConfig = signingConfigs.getByName("debug")
