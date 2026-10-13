@@ -67,7 +67,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: build/app-release.apk
-          tag_name: v2.6.${{ github.run_number }}
+          tag_name: v3.0.${{ github.run_number }}
           release_name: "Release v3.0.${{ github.run_number }}"
           draft: false
           prerelease: false
