@@ -6,12 +6,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_commons/google_mlkit_commons.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as p;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:store_redirect/store_redirect.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class GalleryView extends StatefulWidget {
-  const GalleryView({Key? key, required this.title, this.text, required this.onImage, required this.onDetectorViewModeChanged})
+  const GalleryView(
+      {Key? key,
+      required this.title,
+      this.text,
+      required this.onImage,
+      required this.onDetectorViewModeChanged})
       : super(key: key);
 
   final String title;
@@ -26,6 +32,7 @@ class GalleryView extends StatefulWidget {
 class _GalleryViewState extends State<GalleryView> {
   File? _image;
   String? _path;
+  int? _fileSize;
   ImagePicker? _imagePicker;
   bool _isProcessing = false;
   String _version = 'N/A';
@@ -104,7 +111,9 @@ class _GalleryViewState extends State<GalleryView> {
                       await launchUrl(emailLaunchUri);
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Não foi possível iniciar o cliente de e-mail')),
+                        SnackBar(
+                            content: Text(
+                                'Não foi possível iniciar o cliente de e-mail')),
                       );
                     }
                   },
@@ -168,112 +177,250 @@ class _GalleryViewState extends State<GalleryView> {
   }
 
   Widget _galleryBody() {
-    return ListView(
-      shrinkWrap: true,
-      children: [
-        _image != null
-            ? Container(
-                padding: EdgeInsets.all(32),
-                child: SizedBox(
-                  height: 400,
-                  width: 400,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: <Widget>[
-                      Image.file(_image!),
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: 500),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: _galleryChildren(),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _galleryChildren() {
+    return [
+      if (_image == null)
+        Padding(
+          padding: EdgeInsets.fromLTRB(32, 16, 32, 0),
+          child: Text(
+            'Recognize text from images using your gallery or camera',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      _image != null
+          ? Container(
+              padding: EdgeInsets.all(32),
+              child: SizedBox(
+                height: 400,
+                width: 400,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: <Widget>[
+                    Image.file(_image!),
+                  ],
+                ),
+              ),
+            )
+          : Container(
+              padding: EdgeInsets.all(32),
+              child: Image(
+                image: AssetImage('assets/icon.png'),
+                width: 200,
+                height: 200,
+              ),
+            ),
+      Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: [
+            Expanded(
+              child: Tooltip(
+                message: 'Select an image from the gallery',
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color.fromARGB(100, 3, 169, 244),
+                    foregroundColor: Colors.white,
+                  ),
+                  icon: Icon(Icons.photo_library),
+                  label: Text('Gallery'),
+                  onPressed: () => _getImage(ImageSource.gallery),
+                ),
+              ),
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: Tooltip(
+                message: 'Take a picture with the camera',
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color.fromARGB(100, 3, 169, 244),
+                    foregroundColor: Colors.white,
+                  ),
+                  icon: Icon(Icons.camera_alt),
+                  label: Text('Camera'),
+                  onPressed: () => _getImage(ImageSource.camera),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      if (_isProcessing)
+        Container(
+          height: 50,
+          width: 50,
+          margin: EdgeInsets.only(top: 16),
+          child: Center(
+            child: CircularProgressIndicator(
+              color: Color.fromARGB(100, 3, 169, 244),
+              backgroundColor: Color.fromARGB(100, 212, 211, 255),
+              strokeWidth: 6,
+            ),
+          ),
+        ),
+      if (_image != null && !_isProcessing) _resultCard(),
+    ];
+  }
+
+  static const _accentColor = Color.fromARGB(255, 3, 169, 244);
+
+  Widget _resultCard() {
+    final text = (widget.text ?? '').trim();
+    final hasText = text.isNotEmpty;
+    final words = hasText ? text.split(RegExp(r'\s+')).length : 0;
+    final lines =
+        hasText ? text.split('\n').where((l) => l.trim().isNotEmpty).length : 0;
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Card(
+        elevation: 2,
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              color: _accentColor.withValues(alpha: 0.1),
+              padding: EdgeInsets.fromLTRB(16, 8, 8, 8),
+              child: Row(
+                children: [
+                  Icon(Icons.text_snippet, color: _accentColor),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Recognized text',
+                      style:
+                          TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Copy text',
+                    icon: Icon(Icons.copy, color: _accentColor),
+                    onPressed: hasText
+                        ? () {
+                            Clipboard.setData(ClipboardData(text: text));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Copiado!')),
+                            );
+                          }
+                        : null,
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _statChip(Icons.short_text, '$words words'),
+                      _statChip(Icons.format_list_numbered, '$lines lines'),
+                      _statChip(Icons.abc, '${text.length} chars'),
                     ],
                   ),
-                ),
-              )
-            : Container(
-                padding: EdgeInsets.all(32),
-                child: Image(
-                  image: AssetImage('assets/icon.png'),
-                  width: 200,
-                  height: 200,
-                ),
-              ),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color.fromARGB(100, 3, 169, 244),
-            ),
-            child: Text(
-              'Select from gallery',
-              style: TextStyle(
-                color: Colors.white,
-              ),
-            ),
-            onPressed: () => _getImage(ImageSource.gallery),
-          ),
-        ),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color.fromARGB(100, 3, 169, 244),
-            ),
-            child: Text(
-              'Take a picture',
-              style: TextStyle(
-                color: Colors.white,
-              ),
-            ),
-            onPressed: () => _getImage(ImageSource.camera),
-          ),
-        ),
-        if (_isProcessing)
-          SizedBox(
-            height: 50,
-            width: 50,
-            child: Center(
-              child: CircularProgressIndicator(
-                color: Color.fromARGB(100, 3, 169, 244),
-                backgroundColor: Color.fromARGB(100, 212, 211, 255),
-                strokeWidth: 6,
-              ),
-            ),
-          ),
-        if (_image != null)
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Divider(
-                  color: Color.fromARGB(100, 3, 169, 244),
-                ),
-                Text(
-                  _path == null ? '' : 'File Path:',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
+                  SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: hasText
+                        ? SelectableText(text,
+                            style: TextStyle(fontSize: 15, height: 1.4))
+                        : Text(
+                            'No text detected in this image.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
                   ),
-                ),
-                Divider(
-                  color: Color.fromARGB(100, 3, 169, 244),
-                ),
-                Text(_path == null ? '' : '$_path'),
-                Divider(
-                  color: Color.fromARGB(100, 3, 169, 244),
-                ),
-                Text(
-                  "Recognized text",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
+                  SizedBox(height: 16),
+                  Divider(height: 1),
+                  SizedBox(height: 12),
+                  Text(
+                    'File information',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                   ),
-                ),
-                Divider(
-                  color: Color.fromARGB(100, 3, 169, 244),
-                ),
-                Text(_path == null ? '' : widget.text ?? ''),
-              ],
+                  SizedBox(height: 8),
+                  _infoRow(Icons.image, 'Name', p.basename(_path!)),
+                  _infoRow(
+                      Icons.sd_storage, 'Size', _formatBytes(_fileSize ?? 0)),
+                  _infoRow(Icons.folder, 'Path', _path!),
+                ],
+              ),
             ),
-          ),
-      ],
+          ],
+        ),
+      ),
     );
+  }
+
+  Widget _statChip(IconData icon, String label) {
+    return Chip(
+      avatar: Icon(icon, size: 18, color: _accentColor),
+      label: Text(label),
+      backgroundColor: _accentColor.withValues(alpha: 0.08),
+      side: BorderSide.none,
+      visualDensity: VisualDensity.compact,
+    );
+  }
+
+  Widget _infoRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: Colors.grey.shade600),
+          SizedBox(width: 8),
+          SizedBox(
+            width: 48,
+            child: Text(label, style: TextStyle(fontWeight: FontWeight.w600)),
+          ),
+          Expanded(
+            child: Text(value, style: TextStyle(color: Colors.grey.shade700)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatBytes(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 
   Future<void> _getImage(ImageSource source) async {
@@ -283,6 +430,7 @@ class _GalleryViewState extends State<GalleryView> {
       _isProcessing = true;
       _image = null;
       _path = null;
+      _fileSize = null;
     });
 
     try {
@@ -326,6 +474,7 @@ class _GalleryViewState extends State<GalleryView> {
     setState(() {
       _image = File(path);
       _path = path;
+      _fileSize = File(path).lengthSync();
     });
 
     try {
@@ -352,15 +501,17 @@ class _GalleryViewState extends State<GalleryView> {
       }
     } catch (e) {
       // Fallback to web browser if app store fails
-      final webUrl = Uri.parse(Theme.of(context).platform == TargetPlatform.android
-          ? 'https://play.google.com/store/apps/details?id=$packageName'
-          : 'https://apps.apple.com/app/idYOUR_APP_ID');
+      final webUrl = Uri.parse(
+          Theme.of(context).platform == TargetPlatform.android
+              ? 'https://play.google.com/store/apps/details?id=$packageName'
+              : 'https://apps.apple.com/app/idYOUR_APP_ID');
 
       if (await canLaunchUrl(webUrl)) {
         await launchUrl(webUrl, mode: LaunchMode.externalApplication);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Não foi possível iniciar a loja de aplicativos')),
+          SnackBar(
+              content: Text('Não foi possível iniciar a loja de aplicativos')),
         );
       }
     }
